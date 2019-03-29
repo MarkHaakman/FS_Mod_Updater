@@ -8,12 +8,12 @@
 :: Original code by elpatron68 can be found at https://github.com/elpatron68/cpupdate/
 ::
 :: =============================================================================
-:: Backups will be stored as ZIP files in the subfolder .\fs_mod_updater_backups
-:: Have fun!
+:: USER SETTINGS
 :: =============================================================================
-:: Set Farming Simulator version
-set fsversion=2019
-:: set fsversion=2017
+:: You have to replace these paths with the full path to git.exe and 7z.exe.
+::
+set gitexe="C:\Program Files\Git\bin\git.exe"
+set zipexe="C:\Program Files\7-Zip\7z.exe"
 :: =============================================================================
 :: If you want the command window to close after run: set autoclose="YES".
 :: Otherwise you have to hit a keystroke after the run - which enables you
@@ -22,10 +22,12 @@ set fsversion=2019
 :: set autoclose="YES"
 set autoclose="NO"
 :: =============================================================================
-:: You should replace these with the full path to git.exe and 7z.exe.
+:: Set Farming Simulator version
 ::
-set gitexe="C:\Program Files\Git\bin\git.exe"
-set zipexe="C:\Program Files\7-Zip\7z.exe"
+set fsversion=2019
+:: set fsversion=2017
+:: =============================================================================
+:: END OF USER SETTINGS
 :: =============================================================================
 :: References:
 ::
@@ -196,20 +198,6 @@ if "%newversion%"=="%version%" if %freshinstall%=="no" (
     goto ende
 ) else (
     echo We have found an update.
-)
-
-:: Backup current version.
-if %freshinstall%=="no" (
-    set "curpath=%cd%"
-    set backupdir=fs_mod_updater_backups
-    set backupfile=%backupdir%\%modDestinationName%_%version%.zip
-    echo backupdir: %backupdir%
-    echo modDestinationName: %modDestinationName%
-    echo version: %version%
-    echo backupfile: %backupfile%
-    mkdir .\%backupdir% 2> NUL
-    copy "%destination%" .\%backupfile% > NUL
-    echo Backup location of currently installed version of %gitRepoName%: "%curpath%\%backupfile%"
 )
 
 :: Copy the cloned directory to mod folder.
