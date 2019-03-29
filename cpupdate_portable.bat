@@ -64,34 +64,6 @@ if %errorlevel%==9009 goto zipok="-1"
 if "%gitok%"=="-1" goto gitziperror
 if "%zipok%"=="-1" goto gitziperror
 
-:: Write a VBS file for getting mod version from moddesc.xml
-> "%TEMP%\getversion.vbs" (
-echo.Dim oXml: Set oXml = CreateObject^("Microsoft.XMLDOM"^)
-echo.oXml.Load WScript.Arguments.Item^(0^)
-echo.Dim oDoc: Set oDoc = oXml.documentElement
-echo.
-echo.For Each node In oDoc.childNodes
-echo.    If node.nodeName = "version" Then
-echo.        WScript.Echo node.text
-echo.    End If
-echo.Next
-echo.Set oXml = Nothing
-)
-
-:: Write a VBS file for getting modfolder from gameSettings.xml
-> "%TEMP%\moddir.vbs" (
-echo.Dim oXml: Set oXml = CreateObject^("Microsoft.XMLDOM"^)
-echo.oXml.Load WScript.Arguments.Item^(0^)
-echo.Dim oDoc: Set oDoc = oXml.documentElement
-echo.
-echo.For Each node In oDoc.childNodes
-echo.    If ^(node.nodeName = "modsDirectoryOverride"^) And ^(node.getAttribute^("active"^) = "true"^) Then
-echo.        WScript.Echo node.getAttribute^("directory"^)
-echo.    End If
-echo.Next
-echo.Set oXml = Nothing
-)
-
 :: Set `Documents` folder.
 for /f "skip=2 tokens=2*" %%A in ('reg query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "Personal"') do set "UserDocs=%%B"
 
@@ -113,7 +85,7 @@ set modDestinationName=FS19_%gitRepoName%
 
 :: Set mod directory.
 SETLOCAL
-for /f "delims=" %%i in ('cscript %TEMP%\moddir.vbs "%UserDocs%\My Games\FarmingSimulator%fsversion%\gameSettings.xml" //Nologo') do set moddir=%%i
+for /f "delims=" %%i in ('cscript .\includes\getFSModFolder.vbs "%UserDocs%\My Games\FarmingSimulator%fsversion%\gameSettings.xml" //Nologo') do set moddir=%%i
 
 :: Set file destination.
 if defined moddir (
@@ -143,7 +115,7 @@ if exist .\%gitRepoName%version.txt (
 
 :: Extract moddesc.xml from zip file.
 if %freshinstall%=="no" (
-    cscript "%TEMP%\getversion.vbs" "%TEMP%\moddesc.xml" //Nologo >.\%gitRepoName%version.txt
+    cscript ".\includes\getModVersion.vbs" "%TEMP%\moddesc.xml" //Nologo >.\%gitRepoName%version.txt
 )
 
 :: Sleep for 2 seconds.
@@ -175,7 +147,7 @@ echo Cloning %gitRepoName%...
 %gitexe% clone --depth 1 -q %gitUrl%
 
 :: Get new mod version information.
-cscript "%TEMP%\getversion.vbs" ".\%gitRepoName%%modLocationFromRepoRoot%modDesc.xml" //Nologo >.\%gitRepoName%version.txt
+cscript ".\includes\getModVersion.vbs" ".\%gitRepoName%%modLocationFromRepoRoot%modDesc.xml" //Nologo >.\%gitRepoName%version.txt
 set /p newversion=<.\%gitRepoName%version.txt
 if %colored% == 1 (
     echo [44m%gitRepoName% version from Git: %newversion%[0m
@@ -231,16 +203,8 @@ if "%zipok%"=="-1" (
 )
 goto ende
 
-:ende
-:: Cleanup.
-if exist "%TEMP%\getversion.vbs" (
-    del /q "%TEMP%\getversion.vbs" 2>NUL
-)
-if exist "%TEMP%\moddir.vbs" (
-    del /q "%TEMP%\moddir.vbs" 2>NUL
-)
-
 :: Close script.
+:ende
 echo.
 if %autoclose%=="NO" (
     echo ^(Press any key to exit..^)
